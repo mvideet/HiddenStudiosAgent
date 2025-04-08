@@ -1,2 +1,5 @@
 /.DS_Store
 /.venv
+/node_modules
+/.env
+/selenium_agent/latest_data/

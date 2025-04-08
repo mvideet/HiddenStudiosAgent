@@ -45,7 +45,6 @@ def run_scraper():
     date_picker_button = driver.find_element(By.CSS_SELECTOR, "button[data-testid='date-picker']")
     date_picker_button.click()
     driver.save_screenshot("error.png")
-
     time.sleep(5)
     custom_date = driver.find_element(By.CSS_SELECTOR, "li[value='custom']")
     custom_date.click()
@@ -69,11 +68,9 @@ def run_scraper():
         WebDriverWait(driver, 10).until(
             lambda d: d.find_element(By.CLASS_NAME, "react-datepicker__current-month").text != current_text
         )
-
     print("Target reached:", calendar.text)
     time.sleep(2)
     driver.save_screenshot("error.png")
-
     day_element = WebDriverWait(driver, 10).until(
     EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'react-datepicker__day--027') and contains(@class, 'react-datepicker__day--in-range')]"))
 )
@@ -93,7 +90,7 @@ def run_scraper():
         )
     print("Target month reached:", forward_facing_calendar.text)
     today = datetime.today()
-    day_before = today - timedelta(days=2)
+    day_before = today - timedelta(days=1 )
     driver.save_screenshot("error.png")
     day_str = str(day_before.day).zfill(3)
     print(day_str)
@@ -151,11 +148,12 @@ csv_files = [f for f in extracted_files if f.endswith(".csv")]
 if csv_files:
     latest_csv = os.path.join(downloads_dir, csv_files[0])
     df = pd.read_csv(latest_csv)
-    decompressed_dfs=compress_algos(df)
-    print(decompressed_dfs['Hg3.1']['HgAd-PlayerJoined'][0])
+
+    # Add a new column for the number of players for each 3.x versio
+    decompressed_dfs = compress_algos(df)
     for code, df in decompressed_dfs.items():
         new_df = process_df(df)
-        #new_df.to_csv(code+"_test.csv")
+        new_df.to_csv(code + "_test.csv")
         print(f"Decompressed DataFrame for {code}:")
         print(new_df) 
 else:

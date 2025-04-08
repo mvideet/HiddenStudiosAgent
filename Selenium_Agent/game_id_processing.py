@@ -105,21 +105,24 @@ def decompress_tuples(df_dict):
     return decompressed_dfs
 
 def process_df(df):
-    # print(df.columns)
     players_joined_col = 'HgAd-PlayerJoined'
 
-    players_joined = int(df[players_joined_col][0])
+    # Get the total players (assuming your decompressed df has exactly one row)
+    players_joined = int(df[players_joined_col].iloc[0])
+
     if players_joined == 0:
         print("Warning: Players Joined is zero, cannot calculate accumulative values.")
-        return df  # Early return or handle as needed
+        return df  # or handle differently
+
+    # Identify your "data" columns (excluding the players_joined_col, etc.)
     data_cols = [col for col in df.columns if col != players_joined_col]
     ad_to_column = {}
     ads = ['Ad1', 'Ad2', 'Ad3', 'Ad4', 'Ad5', 'Ad6', 'Ad7', 'Ad8']
     
     for col in data_cols:
         parts = col.split('-')
-        ad = parts[0][2:5]
-        tag = parts[1]
+        ad = parts[0][2:5]  # e.g., "HgAd1" -> "Ad1"
+        tag = parts[1]      # e.g., "Close05", "Close1", etc.
         
         if ad in ads:
             if ad not in ad_to_column:
@@ -128,12 +131,13 @@ def process_df(df):
     
     processed_df = pd.DataFrame.from_dict(ad_to_column, orient='index')
     
-    # Define the desired column order
+    # Define your desired column order
     distance_order = ['Close05', 'Close1', 'Close2', 'Med05', 'Med1', 'Med2', 'Far05', 'Far1', 'Far2']
     
-    # Get existing columns in each category
+    # Gather existing columns in each category
     existing_cols = []
     for dist in distance_order:
+        # If "Close05" (for example) is in the columns, we gather them in sorted order
         if any(dist in col for col in processed_df.columns):
             cols = [col for col in processed_df.columns if dist in col]
             existing_cols.extend(sorted(cols))
@@ -145,18 +149,24 @@ def process_df(df):
     
     processed_df['Close Accumulative'] = processed_df[close_cols].sum(axis=1) / players_joined
     processed_df['Medium Accumulative'] = processed_df[medium_cols].sum(axis=1) / players_joined
-    processed_df['Far Accumulative'] = processed_df[far_cols].sum(axis=1) / players_joined
-    processed_df['Overall Accumulative'] = processed_df.sum(axis=1) / players_joined
+    processed_df['Far Accumulative']   = processed_df[far_cols].sum(axis=1)   / players_joined
+    processed_df['Overall Accumulative'] = processed_df.sum(axis=1)          / players_joined
     
-    # Add accumulative columns to the order
+    # Add a new column with the player_count
+    processed_df['player_count'] = players_joined
+    
+    # Reorder columns: existing columns + accumulative columns + new column
     accumulative_cols = ['Close Accumulative', 'Medium Accumulative', 'Far Accumulative', 'Overall Accumulative']
+    final_col_order = existing_cols + accumulative_cols + ['player_count']
     
-    # Reorder columns
-    final_col_order = existing_cols + accumulative_cols
+    # Ensure only columns that exist are in final_col_order
+    final_col_order = [col for col in final_col_order if col in processed_df.columns]
+    
     processed_df = processed_df[final_col_order]
     processed_df = processed_df.sort_index()
     
     return processed_df
+
 def compress_algos(df):
     filtered_df = filter_hgad_and_playerjoined(df)
     transformed_df = transform_to_tuples(filtered_df)
@@ -166,13 +176,13 @@ def compress_algos(df):
     compressed_dfs = compress_to_single_row(updated_dfs)
     decompressed_dfs = decompress_tuples(compressed_dfs)
     return decompressed_dfs
-# Example usage
-df = pd.read_csv('apr2.csv')
-decompressed_dfs=compress_algos(df)
-# print(decompressed_dfs)
-print(decompressed_dfs['Hg3.1']['HgAd-PlayerJoined'][0])
-for code, df in decompressed_dfs.items():
-    new_df = process_df(df)
-    new_df.to_csv(code+"_test.csv")
-    print(f"Decompressed DataFrame for {code}:")
-    print(new_df) 
+# # Example usage
+# #df = pd.read_csv('apr2.csv')
+# decompressed_dfs=compress_algos(df)
+# # print(decompressed_dfs)
+# print(decompressed_dfs['Hg3.1']['HgAd-PlayerJoined'][0])
+# for code, df in decompressed_dfs.items():
+#     new_df = process_df(df)
+#     new_df.to_csv(code+"_test.csv")
+#     print(f"Decompressed DataFrame for {code}:")
+#     print(new_df) 

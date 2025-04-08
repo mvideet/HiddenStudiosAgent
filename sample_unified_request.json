@@ -1,0 +1,42 @@
+{
+  "campaignName": "HiGround",
+  "startDate": "2025-04-01",
+  "endDate": "2025-05-01",
+  "targetImpressions": 100000,
+  "gameSelections": [
+    {
+      "gameId": "brainrot_boxfights",
+      "ads": [
+        {
+          "adType": "3d",
+          "adSize": "300x250", 
+          "brandName": "HiGround",
+          "productName": "Keyboard",
+          "colors": ["#FF5733", "#33FF57", "#3357FF"],
+          "billboardId": "BILLBOARD_ID_PLACEHOLDER"
+        },
+        {
+          "adType": "static",
+          "adSize": "480x320",
+          "brandName": "HiGround",
+          "productName": "Mosue",
+          "colors": ["#5733FF", "#33FFC1"],
+          "billboardId": "BILLBOARD_ID_PLACEHOLDER"
+        }
+      ]
+    },
+    {
+      "gameId": "redvblue",
+      "ads": [
+        {
+          "adType": "3d",
+          "adSize": "300x250",
+          "brandName": "HiGround",
+          "productName": "Keyboard",
+          "colors": ["#FFFFFF", "#000000", "#0066CC"],
+          "billboardId": "BILLBOARD_ID_PLACEHOLDER"
+        }
+      ]
+    }
+  ]
+} 
