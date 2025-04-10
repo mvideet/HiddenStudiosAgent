@@ -14,6 +14,10 @@ const Campaign = require('./models/Campaign');
 const AdPerformance = require('./models/AdPerformance');
 const Billboard = require('./models/Billboard');
 
+// Import the impression tracking utilities
+const { recordImpressions, checkCampaignStatus } = require('./track-impressions');
+const { processUnifiedRequest } = require('./process-unified-request');
+
 // Initialize Express app
 const app = express();
 
@@ -190,7 +194,6 @@ app.get('/api/ads/:id/with-campaigns', async (req, res) => {
       });
     }
     
-    // Fetch all campaigns associated with this ad
     const campaigns = await Campaign.find({ ad_id: ad.ad_id });
     
     res.status(200).json({
@@ -571,46 +574,65 @@ app.get('/api/campaigns/:id/performance', async (req, res) => {
       });
     }
     
-    // Get all ads across all games in the campaign
+    // Get all ad IDs from the campaign
     const allAdIds = [];
     campaign.games.forEach(game => {
-      allAdIds.push(...game.ads);
+      game.ads.forEach(ad => {
+        allAdIds.push(ad.ad_id);
+      });
     });
     
     // Get all ads with their impressions
     const ads = await Ad.find({ ad_id: { $in: allAdIds } });
     
-    // Calculate total impressions for the campaign
-    const totalImpressions = ads.reduce((sum, ad) => sum + ad.total_impressions, 0);
-    
-    // Update campaign's total impressions
-    campaign.total_impressions = totalImpressions;
-    await campaign.save();
-    
-    // Get detailed performance breakdown
+    // Get performance breakdown by game
     const performanceByGame = {};
     
     for (const game of campaign.games) {
-      const gameAds = ads.filter(ad => game.ads.includes(ad.ad_id));
-      const gameImpressions = gameAds.reduce((sum, ad) => sum + ad.total_impressions, 0);
-      
+      // Initialize game performance data
       performanceByGame[game.game_id] = {
-        total_impressions: gameImpressions,
-        ads: gameAds.map(ad => ({
-          ad_id: ad.ad_id,
-          impressions: ad.total_impressions
-        }))
+        total_impressions: 0,
+        ads: []
       };
+      
+      // Process each ad in this game
+      for (const adEntry of game.ads) {
+        const ad = ads.find(a => a.ad_id === adEntry.ad_id);
+        if (ad) {
+          // Get campaign-specific impressions for this ad
+          const campaignImpression = ad.campaigns.find(c => c.campaign_id === campaign.campaign_id);
+          const impressions = campaignImpression ? campaignImpression.impressions : 0;
+          
+          // Add to game total
+          performanceByGame[game.game_id].total_impressions += impressions;
+          
+          // Add ad details
+          performanceByGame[game.game_id].ads.push({
+            ad_id: ad.ad_id,
+            name: ad.name,
+            target_impressions: adEntry.target_impressions,
+            current_impressions: adEntry.current_impressions,
+            percent_complete: (adEntry.current_impressions / adEntry.target_impressions) * 100
+          });
+        }
+      }
     }
+    
+    const status = await checkCampaignStatus(campaign.campaign_id);
     
     res.status(200).json({
       success: true,
       data: {
         campaign_id: campaign.campaign_id,
         campaign_name: campaign.campaign_name,
+        region: campaign.region,
+        start_time: campaign.start_time,
+        end_time: campaign.end_time,
         target_impressions: campaign.target_impressions,
-        total_impressions: totalImpressions,
-        remaining_impressions: campaign.target_impressions - totalImpressions,
+        total_impressions: campaign.total_impressions,
+        remaining_impressions: campaign.remaining_impressions,
+        percent_complete: status.percent_complete,
+        is_complete: status.is_complete,
         performance_by_game: performanceByGame
       }
     });
@@ -746,6 +768,133 @@ app.post('/api/submit-campaign', async (req, res) => {
       success: false,
       error: 'Server Error: ' + error.message
     });
+  }
+});
+
+// Submit a unified campaign request
+app.post('/api/submit-unified-campaign', async (req, res) => {
+  try {
+    const campaignData = await processUnifiedRequest(req.body);
+    
+    // Create the campaign in the database
+    const campaign = new Campaign(campaignData);
+    await campaign.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Campaign created successfully',
+      data: {
+        campaign_id: campaign.campaign_id,
+        campaign_name: campaign.campaign_name,
+        total_ads: campaign.games.reduce((total, game) => total + game.ads.length, 0)
+      }
+    });
+  } catch (error) {
+    console.error('Error submitting campaign:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Record impressions for an ad
+app.post('/api/record-impressions', async (req, res) => {
+  try {
+    const { campaignId, gameId, adId, count = 1 } = req.body;
+    
+    if (!campaignId || !gameId || !adId) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: campaignId, gameId, adId' 
+      });
+    }
+    
+    const result = await recordImpressions(campaignId, gameId, adId, count);
+    
+    res.status(200).json({
+      success: true,
+      message: `Recorded ${count} impressions`,
+      data: {
+        campaign_id: campaignId,
+        ad_id: adId,
+        current_impressions: result.updated.campaignImpressions,
+        total_ad_impressions: result.updated.totalAdImpressions
+      }
+    });
+  } catch (error) {
+    console.error('Error recording impressions:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get campaign status
+app.get('/api/campaign/:campaignId/status', async (req, res) => {
+  try {
+    const campaignId = req.params.campaignId;
+    const status = await checkCampaignStatus(campaignId);
+    
+    res.status(200).json({
+      success: true,
+      data: status
+    });
+  } catch (error) {
+    console.error('Error checking campaign status:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get all active campaigns
+app.get('/api/campaigns/active', async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const campaigns = await Campaign.find({
+      start_time: { $lte: currentDate },
+      end_time: { $gte: currentDate }
+    }).select('campaign_id campaign_name region start_time end_time games');
+    
+    // Calculate completion percentage for each campaign
+    const campaignsWithStatus = await Promise.all(
+      campaigns.map(async (campaign) => {
+        const status = await checkCampaignStatus(campaign.campaign_id);
+        return {
+          campaign_id: campaign.campaign_id,
+          campaign_name: campaign.campaign_name,
+          region: campaign.region,
+          start_time: campaign.start_time,
+          end_time: campaign.end_time,
+          game_count: campaign.games.length,
+          ad_count: campaign.games.reduce((sum, game) => sum + game.ads.length, 0),
+          percent_complete: status.percent_complete,
+          is_complete: status.is_complete
+        };
+      })
+    );
+    
+    res.status(200).json({
+      success: true,
+      count: campaignsWithStatus.length,
+      data: campaignsWithStatus
+    });
+  } catch (error) {
+    console.error('Error fetching active campaigns:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get campaigns for a specific game
+app.get('/api/campaigns/game/:gameId', async (req, res) => {
+  try {
+    const gameId = req.params.gameId;
+    const campaigns = await Campaign.find({
+      'games.game_id': gameId
+    }).select('campaign_id campaign_name region start_time end_time');
+    
+    res.status(200).json({
+      success: true,
+      count: campaigns.length,
+      data: campaigns
+    });
+  } catch (error) {
+    console.error(`Error fetching campaigns for game ${req.params.gameId}:`, error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

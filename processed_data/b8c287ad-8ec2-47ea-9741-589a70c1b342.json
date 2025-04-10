@@ -1,0 +1,34 @@
+{
+  "campaign_id": "b8c287ad-8ec2-47ea-9741-589a70c1b342",
+  "campaign_name": "Test Campaign",
+  "region": "NA",
+  "start_time": "2024-06-01T00:00:00.000Z",
+  "end_time": "2024-07-01T00:00:00.000Z",
+  "games": [
+    {
+      "game_id": "game_12345678",
+      "ads": [
+        {
+          "ad_id": "ad_3dcf54fd",
+          "target_impressions": 40000,
+          "current_impressions": 0
+        },
+        {
+          "ad_id": "ad_f307f252",
+          "target_impressions": 30000,
+          "current_impressions": 0
+        }
+      ]
+    },
+    {
+      "game_id": "game_87654321",
+      "ads": [
+        {
+          "ad_id": "ad_487b2126",
+          "target_impressions": 30000,
+          "current_impressions": 0
+        }
+      ]
+    }
+  ]
+}

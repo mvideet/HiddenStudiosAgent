@@ -37,28 +37,46 @@ AdPerformanceSchema.post('save', async function() {
     // Update the ad's total_impressions
     const ad = await Ad.findOne({ ad_id: this.ad_id });
     if (ad) {
+      // Increment the ad's total impressions
       ad.total_impressions += this.impressions;
-      await ad.save();
       
-      // Update all campaigns associated with this ad
-      if (ad.campaigns && ad.campaigns.length > 0) {
-        for (const campaignId of ad.campaigns) {
-          const campaign = await Campaign.findOne({ campaign_id: campaignId });
-          if (campaign) {
-            // Calculate new total impressions for the campaign
-            const allAdIds = [];
-            campaign.games.forEach(game => {
-              allAdIds.push(...game.ads);
-            });
-            
-            const ads = await Ad.find({ ad_id: { $in: allAdIds } });
-            const totalImpressions = ads.reduce((sum, ad) => sum + ad.total_impressions, 0);
-            
-            campaign.total_impressions = totalImpressions;
-            await campaign.save();
-          }
+      // Find all campaigns that include this ad
+      const campaigns = await Campaign.find({ 'games.ads.ad_id': this.ad_id });
+      
+      // Update campaign-specific impressions in the Ad model
+      for (let i = 0; i < campaigns.length; i++) {
+        const campaign = campaigns[i];
+        
+        // Find or create campaign entry in ad.campaigns
+        let campaignEntry = ad.campaigns.find(c => c.campaign_id === campaign.campaign_id);
+        if (campaignEntry) {
+          campaignEntry.impressions += this.impressions;
+        } else {
+          ad.campaigns.push({
+            campaign_id: campaign.campaign_id,
+            impressions: this.impressions
+          });
         }
+        
+        // Update the campaign's ad entry current_impressions
+        let updated = false;
+        for (const game of campaign.games) {
+          for (const adEntry of game.ads) {
+            if (adEntry.ad_id === this.ad_id) {
+              adEntry.current_impressions += this.impressions;
+              updated = true;
+              break;
+            }
+          }
+          if (updated) break;
+        }
+        
+        // Save the updated campaign
+        await campaign.save();
       }
+      
+      // Save the updated ad
+      await ad.save();
     }
   } catch (error) {
     console.error('Error updating impression counts:', error);

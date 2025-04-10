@@ -1,0 +1,15 @@
+{
+  "ad_id": "ad_105735a8",
+  "ad_type": "static",
+  "size": "medium",
+  "name": "ad3",
+  "product_or_brand": "product",
+  "contrast": "medium",
+  "billboard_id": null,
+  "game_id": "game_87654321",
+  "ad_space": "sidebar",
+  "campaigns": [],
+  "total_impressions": 0,
+  "impression_multiplier": 1.2,
+  "createdAt": "2025-04-10T04:24:12.055Z"
+}

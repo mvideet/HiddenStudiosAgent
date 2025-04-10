@@ -14,17 +14,18 @@ const AdSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  brand_name: {
+  name: {
     type: String,
     required: true
   },
-  product_name: {
+  product_or_brand: {
     type: String,
+    enum: ['product', 'brand'],
     required: true
   },
-  colors: {
-    type: [String],
-    required: true
+  contrast: {
+    type: Number,
+    default: 1.0
   },
   billboard_id: {
     type: String,
@@ -35,19 +36,51 @@ const AdSchema = new mongoose.Schema({
     ref: 'Game',
     required: true
   },
-  campaigns: {
-    type: [String],
-    ref: 'Campaign',
-    default: []
-  },
+  campaigns: [{
+    campaign_id: {
+      type: String,
+      ref: 'Campaign'
+    },
+    impressions: {
+      type: Number,
+      default: 0
+    }
+  }],
   total_impressions: {
     type: Number,
     default: 0
+  },
+  impression_multiplier: {
+    type: Number,
+    default: 1.0
+  },
+  ad_space: {
+    type: String,
+    default: 'sidebar'
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Add method to increment impressions for a specific campaign
+AdSchema.methods.addImpression = function(campaignId, count = 1) {
+  // Update total impressions
+  this.total_impressions += count;
+  
+  // Find or create the campaign entry
+  const campaignEntry = this.campaigns.find(c => c.campaign_id === campaignId);
+  if (campaignEntry) {
+    campaignEntry.impressions += count;
+  } else {
+    this.campaigns.push({
+      campaign_id: campaignId,
+      impressions: count
+    });
+  }
+  
+  return this.save();
+};
 
 module.exports = mongoose.model('Ad', AdSchema); 
