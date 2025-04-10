@@ -49,6 +49,29 @@ The system utilizes five interconnected models:
 4. Impressions are tracked when ads are shown to players
 5. Campaign completion is determined when all ads meet their target impressions
 
+## Impression Data Structure
+
+The system uses a unified impression request format that tracks impressions across multiple games and ads:
+
+```json
+{
+  "timestamp": "2023-11-15T10:30:00.000Z",
+  "impressions": [
+    {
+      "game_id": "brainrot_boxfights",
+      "ad_name": "BoxAd1",
+      "count": 150,
+      "performance_id": "perf_box1_77777",
+      "date": "2023-11-15T10:30:00.000Z"
+    }
+  ],
+  "batch_id": "batch_98765432",
+  "source": "game_client"
+}
+```
+
+**Note**: The impression tracking system uses `ad_name` for ad assignment and identification. The previously used `ad_loc` field has been removed as it is no longer required.
+
 ## Setup & Installation
 
 ### Prerequisites

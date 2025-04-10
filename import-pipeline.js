@@ -110,13 +110,14 @@ async function importPipeline(filePath) {
             ad_id: processedAdData.ad_id,
             ad_type: processedAdData.ad_type,
             size: processedAdData.size,
-            name: processedAdData.name || adName,
+            name: adName,
             contrast: contrast,
             product_or_brand: processedAdData.product_or_brand,
             game_id: gameSelection.gameId,
             billboard_id: adData.billboardId || null,
             ad_space: processedAdData.ad_space,
             impression_multiplier: processedAdData.impression_multiplier,
+            ad_loc: adData.adLoc || null,
             campaigns: [{
               campaign_id: campaign.campaign_id,
               impressions: 0

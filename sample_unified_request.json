@@ -11,12 +11,14 @@
         {
           "filePath": "images/ad1.png",
           "wantedImpressions": 80000,
-          "adNum": "BoxAd1"
+          "adNum": "BoxAd1",
+          "adLoc": 1
         },
         {
           "filePath": "images/ad2.png",
           "wantedImpressions": 40000,
-          "adNum": "BoxAd2"
+          "adNum": "BoxAd2",
+          "adLoc": 2
         }
       ]
     },
@@ -26,7 +28,8 @@
         {
           "filePath": "images/ad3.png",
           "wantedImpressions": 80000,
-          "adNum": "RvBAd1"
+          "adNum": "RvBAd3",
+          "adLoc": 3
         }
       ]
     }

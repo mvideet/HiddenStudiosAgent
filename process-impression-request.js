@@ -95,48 +95,63 @@ async function processImpressions(filePath) {
       console.log(`[${getElapsedTime()}s] Processing ${count} impressions for ad ${requestAdName} (mapped to ${dbAdName}) in game ${gameId}`);
       
       try {
-        // Find ad by name and game ID instead of by ad_id
+        // Find ad by name and game ID
         let ad = await Ad.findOne({ 
-          name: dbAdName,
+          name: requestAdName,  // We can now search directly by the ad name
           game_id: gameId
         });
         
         if (!ad) {
-          console.warn(`[${getElapsedTime()}s] No ad found with name ${dbAdName} in game ${gameId}, trying alternative approaches...`);
+          console.warn(`[${getElapsedTime()}s] No ad found with name ${requestAdName} in game ${gameId}, trying alternative approaches...`);
           
-          // Try to find by similar name (case insensitive)
-          const adsByName = await Ad.find({ game_id: gameId });
-          console.log(`[${getElapsedTime()}s] Found ${adsByName.length} ads in game ${gameId}`);
-          
-          // Log all available ads
-          adsByName.forEach(a => {
-            console.log(`[${getElapsedTime()}s] - Available ad: ${a.name} (${a.ad_id})`);
-          });
-          
-          // Try matching by name containing the number
-          let matchedAd = null;
-          const numberMatch = requestAdName.match(/[0-9]+/);
-          if (numberMatch) {
-            const number = numberMatch[0];
-            matchedAd = adsByName.find(a => a.name.includes(number));
-            if (matchedAd) {
-              console.log(`[${getElapsedTime()}s] Found ad by number match: ${matchedAd.name} (${matchedAd.ad_id})`);
+          // Try to find by ad_loc if available
+          if (impression.ad_loc) {
+            ad = await Ad.findOne({
+              game_id: gameId,
+              ad_loc: impression.ad_loc
+            });
+            
+            if (ad) {
+              console.log(`[${getElapsedTime()}s] Found ad by location ${impression.ad_loc}: ${ad.name} (${ad.ad_id})`);
             }
           }
           
-          // If still no match, try the first ad in the game as a fallback
-          if (!matchedAd && adsByName.length > 0) {
-            matchedAd = adsByName[0];
-            console.log(`[${getElapsedTime()}s] Using first available ad as fallback: ${matchedAd.name} (${matchedAd.ad_id})`);
+          // If still not found, try other approaches
+          if (!ad) {
+            // Try to find by similar name (case insensitive)
+            const adsByName = await Ad.find({ game_id: gameId });
+            console.log(`[${getElapsedTime()}s] Found ${adsByName.length} ads in game ${gameId}`);
+            
+            // Log all available ads
+            adsByName.forEach(a => {
+              console.log(`[${getElapsedTime()}s] - Available ad: ${a.name} (${a.ad_id}), Location: ${a.ad_loc || 'None'}`);
+            });
+            
+            // Try matching by name containing the number
+            let matchedAd = null;
+            const numberMatch = requestAdName.match(/[0-9]+/);
+            if (numberMatch) {
+              const number = numberMatch[0];
+              matchedAd = adsByName.find(a => a.name.includes(number));
+              if (matchedAd) {
+                console.log(`[${getElapsedTime()}s] Found ad by number match: ${matchedAd.name} (${matchedAd.ad_id})`);
+              }
+            }
+            
+            // If still no match, try the first ad in the game as a fallback
+            if (!matchedAd && adsByName.length > 0) {
+              matchedAd = adsByName[0];
+              console.log(`[${getElapsedTime()}s] Using first available ad as fallback: ${matchedAd.name} (${matchedAd.ad_id})`);
+            }
+            
+            if (!matchedAd) {
+              console.warn(`[${getElapsedTime()}s] No ads found for game ${gameId}, skipping`);
+              results.failed++;
+              continue;
+            }
+            
+            ad = matchedAd;
           }
-          
-          if (!matchedAd) {
-            console.warn(`[${getElapsedTime()}s] No ads found for game ${gameId}, skipping`);
-            results.failed++;
-            continue;
-          }
-          
-          ad = matchedAd;
         }
         
         console.log(`[${getElapsedTime()}s] Found ad with ID: ${ad.ad_id}`);

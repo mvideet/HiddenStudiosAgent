@@ -36,6 +36,12 @@ const AdSchema = new mongoose.Schema({
     ref: 'Game',
     required: true
   },
+  ad_loc: {
+    type: Number,
+    min: 1,
+    max: 10,
+    default: null
+  },
   campaigns: [{
     campaign_id: {
       type: String,
