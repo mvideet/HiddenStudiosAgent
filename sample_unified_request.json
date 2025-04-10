@@ -1,32 +1,32 @@
 {
-  "campaignName": "Test Campaign",
-  "startDate": "2024-06-01",
-  "endDate": "2024-07-01",
-  "targetImpressions": 100000,
+  "campaignName": "HiGround Campaign",
+  "startDate": "2025-04-10",
+  "endDate": "2025-05-10",
+  "targetImpressions": 200000,
   "region": "NA",
   "gameSelections": [
     {
-      "gameId": "game_12345678",
+      "gameId": "brainrot_boxfights",
       "ads": [
         {
           "filePath": "images/ad1.png",
-          "wantedImpressions": 40000,
-          "adNum": "Ad1"
+          "wantedImpressions": 80000,
+          "adNum": "BoxAd1"
         },
         {
           "filePath": "images/ad2.png",
-          "wantedImpressions": 30000,
-          "adNum": "Ad2"
+          "wantedImpressions": 40000,
+          "adNum": "BoxAd2"
         }
       ]
     },
     {
-      "gameId": "game_87654321",
+      "gameId": "redvblue",
       "ads": [
         {
           "filePath": "images/ad3.png",
-          "wantedImpressions": 30000,
-          "adNum": "Ad3"
+          "wantedImpressions": 80000,
+          "adNum": "RvBAd1"
         }
       ]
     }

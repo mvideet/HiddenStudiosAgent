@@ -1,0 +1,31 @@
+{
+  "timestamp": "2023-11-15T10:30:00.000Z",
+  "impressions": [
+    {
+      "game_id": "brainrot_boxfights",
+      "ad_id": "87310488-a76e-4b60-84e3-32246ccde39f",
+      "ad_name": "BoxAd1",
+      "count": 150,
+      "performance_id": "perf_box1_44444",
+      "date": "2023-11-15T10:30:00.000Z"
+    },
+    {
+      "game_id": "brainrot_boxfights",
+      "ad_id": "80d17f4f-fc96-487e-8198-23e8313d5539",
+      "ad_name": "BoxAd2",
+      "count": 75,
+      "performance_id": "perf_box2_55555",
+      "date": "2023-11-15T11:45:00.000Z"
+    },
+    {
+      "game_id": "redvblue",
+      "ad_id": "95318b5a-1038-4661-a01a-fc46ae2dc0b8",
+      "ad_name": "RvBAd3",
+      "count": 220,
+      "performance_id": "perf_rvb_66666",
+      "date": "2023-11-15T14:20:00.000Z"
+    }
+  ],
+  "batch_id": "batch_98765432",
+  "source": "game_client"
+} 

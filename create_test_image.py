@@ -1,3 +1,4 @@
+#Create sample images for testing the pipeline for .png files
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 import os

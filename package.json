@@ -9,7 +9,9 @@
     "seed": "node seed-games.js",
     "upload-campaign": "node upload-unified-campaign.js",
     "simulate-impressions": "node simulate-impressions.js",
-    "import-pipeline": "node import-pipeline.js"
+    "import-pipeline": "node import-pipeline.js",
+    "process-impressions": "node process-impression-request.js",
+    "impression-request": "node process-impression-request.js"
   },
   "dependencies": {
     "axios": "^1.8.4",

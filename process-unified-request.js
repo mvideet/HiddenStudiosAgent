@@ -90,7 +90,6 @@ function processAdImage(imagePath, gameId) {
       };
     };
     
-    // Try using Python processor with our dedicated script
     try {
       console.log(`Processing image: ${imagePath}`);
       
@@ -113,7 +112,6 @@ function processAdImage(imagePath, gameId) {
         console.error(`Python stderr: ${data.toString()}`);
       });
       
-      // Handle process completion
       pythonProcess.on('close', (code) => {
         console.log(`Python process exited with code ${code}`);
         

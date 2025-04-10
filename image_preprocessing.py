@@ -1,3 +1,4 @@
+#Preprocess the images: gest the size, features of the images, get ad multiplier
 import numpy as np
 import pandas as pd
 from PIL import Image

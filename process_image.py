@@ -1,3 +1,4 @@
+#Process the image: get the ad parameters
 #!/usr/bin/env python
 import sys
 import json
